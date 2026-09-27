@@ -1,0 +1,6 @@
+{
+  "name": "Grocery List Maker & Expense Tracker",
+  "description": "Smart grocery list builder and in-store shopping assistant with brand & unit details, impulse buy tracking, fallback alternatives, and monthly expense analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
