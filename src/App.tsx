@@ -17,6 +17,8 @@ import { ItemModal } from './components/ItemModal';
 import { TripSummaryModal } from './components/TripSummaryModal';
 import { ShareModal } from './components/ShareModal';
 import { PWAInstallModal } from './components/PWAInstallModal';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { DEFAULT_STAPLES } from './data/defaultStaples';
 import { auth, subscribeToUserData, saveUserDataToFirestore, UserCloudData } from './lib/firebase';
@@ -49,6 +51,50 @@ export default function App() {
   const [isTripSummaryOpen, setIsTripSummaryOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const { isInstalled, hasNativePrompt, triggerNativePrompt } = usePWAInstall();
+
+  // Legal Pages State & Hash Navigation
+  const [legalView, setLegalView] = useState<'privacy' | 'terms' | null>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#privacy') return 'privacy';
+      if (hash === '#terms' || hash === '#terms-of-service') return 'terms';
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#privacy') {
+        setLegalView('privacy');
+      } else if (hash === '#terms' || hash === '#terms-of-service') {
+        setLegalView('terms');
+      } else if (!hash) {
+        setLegalView(null);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const openPrivacy = () => {
+    setLegalView('privacy');
+    window.location.hash = 'privacy';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openTerms = () => {
+    setLegalView('terms');
+    window.location.hash = 'terms';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const closeLegalView = () => {
+    setLegalView(null);
+    if (window.location.hash) {
+      history.pushState('', document.title, window.location.pathname + window.location.search);
+    }
+  };
 
   // Keep a ref to latest state to avoid stale closure sync issues
   const stateRef = useRef({ items, trips, staples, budgets, currency, recentStore });
@@ -491,6 +537,24 @@ export default function App() {
 
   const inCartCount = items.filter((i) => i.status === 'in_cart').length;
 
+  if (legalView === 'privacy') {
+    return (
+      <PrivacyPolicy
+        onBack={closeLegalView}
+        onOpenTerms={openTerms}
+      />
+    );
+  }
+
+  if (legalView === 'terms') {
+    return (
+      <TermsOfService
+        onBack={closeLegalView}
+        onOpenPrivacy={openPrivacy}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white transition-colors duration-200 flex flex-col font-sans">
       {/* Top Navbar */}
@@ -612,7 +676,21 @@ export default function App() {
             <span className="text-emerald-600 dark:text-emerald-500 font-medium">✓ App Installed</span>
           )}
           <span className="text-zinc-300 dark:text-zinc-700">•</span>
-          <span>100% Offline Ready</span>
+          <button
+            id="btn-footer-privacy"
+            onClick={openPrivacy}
+            className="hover:text-zinc-900 dark:hover:text-zinc-300 hover:underline cursor-pointer transition-colors"
+          >
+            Privacy Policy
+          </button>
+          <span className="text-zinc-300 dark:text-zinc-700">•</span>
+          <button
+            id="btn-footer-terms"
+            onClick={openTerms}
+            className="hover:text-zinc-900 dark:hover:text-zinc-300 hover:underline cursor-pointer transition-colors"
+          >
+            Terms & Conditions
+          </button>
         </footer>
       </main>
 
